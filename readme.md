@@ -4,15 +4,16 @@
 
 現代化的圖形介面應用程式,自動登入 TECO SSP 系統,抓取出勤異常清單資料,並計算每日加班時數。
 
-### GUI 版本特色 (v1.0.2)
+### GUI 版本特色 (v1.1.0)
 
-- 🎨 **現代化介面**: 基於 CustomTkinter 的深色主題 GUI
-- 🔐 **便捷登入**: 圖形化登入介面,背景執行不阻塞
-- 📊 **表格檢視**: 可排序、可複製的出勤記錄表格
+- 🎨 **專業 UI/UX 設計**: 全新設計系統,統一視覺風格
+- 🔐 **安全記住我功能**: Windows Credential Manager + Fernet 加密
+- 📊 **統計儀表板**: 4 張資料卡片展示關鍵指標
+- 🖥️ **現代化介面**: 導覽列 + 統計區 + 報表區 + 底部資訊
 - 📋 **智慧複製**: 支援複製加班時數欄位 (逐行複製或全選)
 - 💾 **Excel 匯出**: 一鍵匯出報表到 Excel 檔案
 - 📝 **即時狀態**: 彩色狀態訊息,清楚顯示操作結果
-- 🏗️ **模組化架構**: MVC 分層設計,易於維護和擴展
+- 🏗️ **SOLID 原則**: 遵循軟體工程最佳實踐
 - ✅ **完整測試**: 44 個單元測試,確保程式品質
 - 📦 **獨立執行檔**: 支援打包成單一 EXE,無需安裝 Python
 - 🔄 **自動更新檢查**: 啟動時自動檢查 GitHub 最新版本,有新版本時通知
@@ -31,7 +32,7 @@
 
 直接執行打包好的程式:
 ```bash
-dist\overtime-assistant-1.0.2.exe
+dist\overtime-assistant-1.1.0.exe
 ```
 
 **提示**: 檔名包含版本號,每次更新後版本號會自動變更
@@ -167,14 +168,14 @@ ui/
 編輯 `src/core/version.py`:
 
 ```python
-VERSION = "1.0.2"  # 修改版本號
-VERSION_NAME = "新功能說明"
+VERSION = "1.1.0"  # 修改版本號
+VERSION_NAME = "專業 UI/UX 大改版 + 記住我功能"
 ```
 
 重新封裝時會自動使用新版本號:
 ```bash
 python -m PyInstaller overtime_calculator.spec --clean
-# 產生: overtime-assistant-1.0.2.exe
+# 產生: overtime-assistant-1.1.0.exe
 ```
 
 詳細版本管理說明請參考 [docs/development/VERSION_MANAGEMENT.md](docs/development/VERSION_MANAGEMENT.md)
@@ -268,6 +269,28 @@ logger.setLevel(logging.DEBUG)  # DEBUG, INFO, WARNING, ERROR
 本程式僅供個人使用,請勿用於非法用途。使用本程式所產生的任何後果由使用者自行承擔。
 
 ## 更新記錄
+
+### v1.1.0 (2025/01/21): 專業 UI/UX 大改版 + 安全記住我功能 🎨🔒
+
+**重大更新**:
+- 🎨 **全新設計系統**: 統一的顏色/字體/間距規範
+- 🔐 **記住我功能**: Windows Credential Manager + Fernet 加密
+- 📊 **統計儀表板**: 4 張資料卡片 (總筆數/總時數/平均/最高)
+- 🖥️ **主視窗重構**: 導覽列 + Logo + 使用者資訊 + 登出按鈕
+- 🎯 **登入頁面**: 750px 寬卡片 + 密碼顯示切換 + 版本號
+- 🏗️ **SOLID 原則**: 完整遵循軟體工程最佳實踐
+- 🔧 **Bug 修復**: 屬性名稱修正、UI 布局問題
+
+**技術改進**:
+- ✨ 新增 `ui/config/design_system.py` - 設計系統
+- ✨ 新增 `ui/components/statistics_card.py` - 統計卡片
+- ✨ 新增 `src/services/credential_manager.py` - 憑證管理
+- ✨ 重構 `ui/main_window.py` (~500 行)
+- ✨ 重構 `ui/components/login_frame.py` (~290 行)
+
+**詳細說明**: [RELEASE_v1.1.0.md](docs/release/RELEASE_v1.1.0.md)
+
+---
 
 ### v1.0.2 (2025/11/21): 修復版本檢查功能 🐛
 
