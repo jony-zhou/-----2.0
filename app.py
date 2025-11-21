@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-TECO SSP 加班時數計算器 v2.0
+TECO SSP 加班時數計算器 v0.1.0
 GUI 應用程式入口
 """
 
