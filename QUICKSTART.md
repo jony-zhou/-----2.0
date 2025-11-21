@@ -62,7 +62,7 @@ python app.py
 ## 5. 專案結構說明
 
 ```
-OvertimeAssistant/
+overtime-assistant/
 ├── src/                # 核心程式碼
 │   ├── core/          # 業務邏輯 (加班計算)
 │   ├── models/        # 資料模型
