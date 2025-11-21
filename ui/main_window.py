@@ -28,6 +28,27 @@ class MainWindow(ctk.CTk):
         self.title("TECO SSP 加班時數計算器 v2.0")
         self.geometry("900x700")
         
+        # 設定圖示 (優先使用 .ico 格式)
+        icon_ico = Path(__file__).parent.parent / "assets" / "icon.ico"
+        icon_png = Path(__file__).parent.parent / "assets" / "icon.png"
+        
+        # 嘗試載入圖示
+        try:
+            if icon_ico.exists():
+                # Windows 優先使用 .ico
+                self.iconbitmap(str(icon_ico))
+            elif icon_png.exists():
+                # 備用方案使用 PNG
+                from PIL import Image, ImageTk
+                icon_image = Image.open(str(icon_png))
+                photo = ImageTk.PhotoImage(icon_image)
+                self.iconphoto(True, photo)
+                # 保持引用避免被垃圾回收
+                self._icon_photo = photo
+        except Exception as e:
+            # 圖示載入失敗不影響程式運行
+            logger.debug(f"圖示載入失敗: {e}")
+        
         # 初始化服務
         self.settings = Settings()
         self.auth_service: Optional[AuthService] = None
