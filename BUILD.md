@@ -10,16 +10,36 @@ pyi-makespec --name="TECO加班計算器" --noconsole app.py
 
 ## 打包成單一執行檔
 
+### 推薦方式 (完整重建)
+
+```bash
+# 使用虛擬環境的 Python (推薦)
+.\venv\Scripts\python.exe -m PyInstaller overtime_calculator.spec --clean --noconfirm
+
+# 或使用系統 Python
+pyinstaller overtime_calculator.spec --clean --noconfirm
+```
+
+### 快速打包 (增量更新)
+
 ```bash
 pyinstaller overtime_calculator.spec
 ```
 
-## 打包選項說明
+## 打包參數說明
 
+### spec 檔案選項
 - `--onefile`: 打包成單一執行檔
-- `--noconsole`: 不顯示終端機視窗
+- `--noconsole` / `console=False`: 不顯示終端機視窗
 - `--name`: 執行檔名稱
 - `--icon`: 指定圖示檔案 (.ico)
+- `datas=[]`: 包含額外的資料檔案 (如圖示)
+- `hiddenimports=[]`: 手動指定隱藏的模組依賴
+
+### 命令列選項
+- `--clean`: 清除暫存檔和快取,重新分析所有依賴 (建議使用)
+- `--noconfirm`: 自動覆蓋輸出檔案,不詢問
+- `--log-level`: 設定日誌等級 (DEBUG, INFO, WARN, ERROR)
 
 ## 輸出位置
 

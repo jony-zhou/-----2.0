@@ -33,24 +33,36 @@ python app.py
 
 ```bash
 # 使用虛擬環境
-.\.venv\Scripts\python.exe -m pytest
+.\venv\Scripts\python.exe -m pytest
 
 # 查看測試覆蓋率
-.\.venv\Scripts\python.exe -m pytest --cov=src --cov-report=html
+.\venv\Scripts\python.exe -m pytest --cov=src --cov-report=html
 ```
 
 ### 打包成執行檔
 
 ```bash
-.\.venv\Scripts\python.exe -m PyInstaller overtime_calculator.spec
+# 完整重新打包 (推薦)
+.\venv\Scripts\python.exe -m PyInstaller overtime_calculator.spec --clean --noconfirm
+
+# 快速打包 (增量)
+.\venv\Scripts\python.exe -m PyInstaller overtime_calculator.spec
 ```
 
 執行檔位於 `dist/TECO加班計算器.exe`
 
+### 圖示檔案
+
+專案使用的應用程式圖示:
+- `assets/icon.png`: PNG 格式 (原始圖檔)
+- `assets/icon.ico`: ICO 格式 (Windows 圖示)
+
+打包時會自動包含這兩個檔案,執行檔的檔案圖示和視窗圖示都會使用 `icon.ico`
+
 ## 5. 專案結構說明
 
 ```
-加班計算機2.0/
+OvertimeAssistant/
 ├── src/                # 核心程式碼
 │   ├── core/          # 業務邏輯 (加班計算)
 │   ├── models/        # 資料模型

@@ -2,15 +2,19 @@
 
 ## 功能說明
 
-自動登入 TECO SSP 系統,抓取出勤異常清單資料,並計算每日加班時數。
+現代化的圖形介面應用程式,自動登入 TECO SSP 系統,抓取出勤異常清單資料,並計算每日加班時數。
 
-### 新版改進
+### GUI 版本特色 (v0.1.0)
 
-- ✅ **解決 SSL 憑證問題**: 自動處理公司內部網站的 SSL 憑證驗證問題
-- ✅ **修正表格定位**: 正確解析 ASP.NET GridView 表格結構,支援動態 ID 匹配
-- ✅ **增強 HTML 解析**: 支援多種 HTML 結構變化,更穩定的資料擷取
-- ✅ **完整錯誤處理**: 詳細的日誌記錄和錯誤提示
-- ✅ **改進日誌輸出**: 更清楚的處理流程與除錯資訊
+- 🎨 **現代化介面**: 基於 CustomTkinter 的深色主題 GUI
+- 🔐 **便捷登入**: 圖形化登入介面,背景執行不阻塞
+- 📊 **表格檢視**: 可排序、可複製的出勤記錄表格
+- 📋 **智慧複製**: 支援複製加班時數欄位 (逐行複製或全選)
+- 💾 **Excel 匯出**: 一鍵匯出報表到 Excel 檔案
+- 📝 **即時狀態**: 彩色狀態訊息,清楚顯示操作結果
+- 🏗️ **模組化架構**: MVC 分層設計,易於維護和擴展
+- ✅ **完整測試**: 17 個單元測試,確保程式品質
+- 📦 **獨立執行檔**: 支援打包成單一 EXE,無需安裝 Python
 
 ## 加班時數計算公式
 
@@ -20,150 +24,219 @@
 
 轉換為小時單位,例如: 1小時30分鐘 = 1.5 小時
 
-## 安裝步驟
+## 快速開始
+
+### 方法 1: 使用執行檔 (推薦)
+
+直接執行打包好的程式:
+```bash
+dist\TECO加班計算器.exe
+```
+
+### 方法 2: 從原始碼執行
 
 1. **安裝 Python 相依套件**
-
 ```bash
 pip install -r requirements.txt
 ```
 
-或個別安裝:
-
+2. **執行應用程式**
 ```bash
-pip install requests beautifulsoup4 pandas openpyxl lxml
+python app.py
 ```
 
-2. **執行程式**
-
-```bash
-python overtime_calculator.py
-```
+詳細說明請參考 [QUICKSTART.md](QUICKSTART.md)
 
 ## 使用流程
 
-1. 執行程式後,輸入您的 SSP 帳號和密碼
-2. 程式會自動登入系統
-3. 自動抓取「出勤異常清單(本月)」的所有資料(包含多頁)
-4. 計算每日加班時數
-5. 顯示統計報表
-6. 可選擇匯出為 Excel 檔案
+1. **啟動程式**: 執行 `TECO加班計算器.exe` 或 `python app.py`
+2. **登入系統**: 在登入介面輸入 SSP 帳號和密碼,點擊「登入」
+3. **自動處理**: 程式自動抓取出勤資料並計算加班時數(背景執行)
+4. **檢視報表**: 在表格中查看出勤記錄和統計資訊
+5. **複製資料**: 
+   - 單選某行後按 `Ctrl+C` 或右鍵「複製加班時數」
+   - 右鍵選擇「複製全部加班時數」
+   - 點擊「複製總時數」按鈕複製統計數字
+6. **匯出 Excel**: 點擊「匯出 Excel」將報表儲存到 `reports/` 資料夾
+7. **登出**: 點擊最下方「登出」按鈕清除登入資訊
 
-## 輸出報表範例
+## 報表顯示
 
-```
-======================================================================
-                        加班時數統計報表                        
-======================================================================
+### GUI 表格檢視
 
-      日期      上班時間    下班時間  加班時數
-2025/11/18  08:55:54  20:00:28     1.6
-2025/11/17  08:52:50  23:50:06     5.3
-2025/11/14  08:55:23  19:18:06     0.9
-2025/11/13  08:58:01  19:57:12     1.5
-2025/11/11  09:00:25  19:23:01     0.9
+程式會在視窗中以表格形式顯示:
+- **日期**: 出勤日期 (可點擊排序)
+- **上班時間**: 第一次刷卡時間
+- **下班時間**: 最後一次刷卡時間
+- **總工時**: 總工作分鐘數
+- **加班時數**: 計算後的加班小時數 (可複製)
 
-----------------------------------------------------------------------
-總加班時數: 45.2 小時
-平均每日加班: 2.3 小時
-最長加班: 5.3 小時
-======================================================================
-```
+### 統計資訊
+
+視窗底部顯示:
+- **總加班時數**: 累計加班總時數
+- **平均每日加班**: 平均每天加班時數
+- **最長加班**: 單日最長加班時數
+
+### Excel 匯出格式
+
+匯出的 Excel 檔案包含:
+- 所有出勤記錄明細
+- 自動格式化的欄位
+- 統計數據彙總
+- 檔案儲存於 `reports/overtime_report_YYYYMMDD_HHMMSS.xlsx`
 
 ## 程式架構
 
-### 主要類別: `OvertimeCalculator`
+### MVC 分層設計
 
-#### 方法說明
+```
+src/
+├── core/              # 核心業務邏輯
+│   └── calculator.py  # OvertimeCalculator 加班計算類別
+├── models/            # 資料模型
+│   ├── attendance.py  # AttendanceRecord 出勤記錄
+│   └── report.py      # OvertimeReport 報表模型
+├── services/          # 服務層
+│   ├── auth_service.py    # AuthService 認證服務
+│   ├── data_service.py    # DataService 資料擷取
+│   └── export_service.py  # ExportService Excel匯出
+├── config/            # 配置設定
+│   └── settings.py    # Settings 系統設定
+└── utils/             # 工具函式
+    └── logger.py      # 日誌設定
 
-- `login(username, password)`: 登入系統
-- `get_attendance_data()`: 取得所有出勤資料(自動處理分頁)
-- `calculate_overtime(records)`: 計算加班時數
-- `generate_report(df)`: 生成統計報表
+ui/
+├── components/        # UI 元件
+│   ├── login_frame.py    # 登入介面
+│   ├── report_frame.py   # 報表表格
+│   └── status_frame.py   # 狀態訊息
+└── main_window.py     # 主視窗
+```
 
-### 資料處理流程
+### 核心類別說明
 
-1. **登入階段**
-   - 取得登入頁面的 ASP.NET ViewState 參數
-   - 提交帳號密碼進行驗證
-   - 維護 Session 狀態
+#### `OvertimeCalculator` (src/core/calculator.py)
+- `calculate(records)`: 計算加班時數
+- `_calculate_single(record)`: 單筆記錄計算
+- `_parse_time(time_str)`: 時間解析
 
-2. **資料抓取階段**
-   - 訪問出勤異常頁面
-   - 解析 HTML 表格資料
-   - 自動偵測並處理分頁
-   - 使用 ASP.NET PostBack 機制翻頁
+#### `AuthService` (src/services/auth_service.py)
+- `login(username, password)`: 執行登入
+- `_get_login_page()`: 取得 ViewState
 
-3. **計算階段**
-   - 解析日期和時間字串
-   - 計算總工作時間
-   - 扣除固定時間(午休70分 + 上班480分 + 休息30分)
-   - 轉換為小時單位
+#### `DataService` (src/services/data_service.py)
+- `fetch_attendance_data(session)`: 抓取出勤資料
+- `_fetch_page(session, page_num)`: 處理分頁
 
-4. **報表輸出**
-   - 使用 Pandas DataFrame 整理資料
-   - 依日期排序
-   - 計算統計數據
-   - 可匯出為 Excel 格式
+#### `MainWindow` (ui/main_window.py)
+- `on_login()`: 登入處理 (背景執行)
+- `fetch_data()`: 資料抓取 (背景執行)
+- `on_export()`: Excel 匯出
+- `on_logout()`: 登出清除
+
+### 資料流程
+
+1. **使用者操作** → UI 元件
+2. **UI 元件** → MainWindow 事件處理
+3. **MainWindow** → Service 層 (背景執行緒)
+4. **Service** → 核心業務邏輯
+5. **結果** → UI 更新 (主執行緒)
 
 ## 注意事項
 
 1. **網路連線**: 需要能夠訪問 `https://ssp.teco.com.tw`
 2. **帳號權限**: 需要有效的 SSP 系統帳號
-3. **ASP.NET 網站**: 本程式處理 ASP.NET WebForms 的特殊機制
-4. **時間格式**: 假設刷卡時間格式為 `HH:MM:SS`
-5. **分頁處理**: 自動處理多頁資料
+3. **SSL 憑證**: 程式已處理內部憑證問題 (`verify_ssl=False`)
+4. **ASP.NET 網站**: 自動處理 ViewState 和 PostBack 機制
+5. **時間格式**: 刷卡時間格式 `HH:MM:SS`,日期格式 `YYYY/MM/DD`
+6. **分頁處理**: 自動抓取所有頁面 (最多 10 頁)
+7. **背景執行**: 登入和資料抓取在背景執行,不會凍結介面
+8. **資料夾**: 程式會自動建立 `reports/` 和 `logs/` 資料夾
 
 ## 客製化調整
 
-### 修改加班計算公式
+### 修改時間設定
 
-如果您的公司規定不同,可以修改 `calculate_overtime` 方法中的計算邏輯:
+編輯 `src/config/settings.py`:
+
+```python
+@dataclass
+class Settings:
+    LUNCH_BREAK: int = 70        # 午休時間 (分鐘)
+    WORK_HOURS: int = 480        # 正常工時 (分鐘)
+    REST_TIME: int = 30          # 休息時間 (分鐘)
+    MAX_OVERTIME_HOURS: int = 4  # 單日最大加班時數
+```
+
+### 修改加班計算邏輯
+
+編輯 `src/core/calculator.py` 的 `_calculate_single` 方法:
 
 ```python
 # 目前公式
-overtime_minutes = total_minutes - 70 - 480 - 30
+overtime_minutes = total_minutes - self.settings.LUNCH_BREAK - self.settings.WORK_HOURS - self.settings.REST_TIME
 
 # 例如:不扣休息時間
-overtime_minutes = total_minutes - 70 - 480
+overtime_minutes = total_minutes - self.settings.LUNCH_BREAK - self.settings.WORK_HOURS
 ```
 
-### 修改登入按鈕名稱
+### 修改 UI 主題
 
-如果登入頁面的按鈕名稱不同,請修改 `login` 方法中的:
+編輯 `ui/main_window.py`:
 
 ```python
-login_data = {
-    # ...
-    'btnLogin': '登入'  # 修改為實際的按鈕名稱或 ID
-}
+ctk.set_appearance_mode("dark")  # 改為 "light" 或 "system"
+ctk.set_default_color_theme("blue")  # 改為其他顏色主題
 ```
 
-### 增加錯誤處理
+### 調整日誌等級
 
-程式已包含基本的錯誤處理,如需更詳細的 log,可以加入 logging 模組。
+編輯 `src/utils/logger.py`:
+
+```python
+logger.setLevel(logging.DEBUG)  # DEBUG, INFO, WARNING, ERROR
+```
 
 ## 疑難排解
 
-### SSL 憑證驗證錯誤
-如果遇到 `SSL: CERTIFICATE_VERIFY_FAILED` 錯誤:
-- **原因**: 公司內部網站的 SSL 憑證可能不完整或缺少 Subject Key Identifier
-- **解決**: 程式已預設關閉 SSL 驗證 (`verify_ssl=False`)
-- **安全性**: 僅在內部網路使用時安全,請勿用於公開網路
+### GUI 無法啟動
+- 確認已安裝所有依賴: `pip install -r requirements.txt`
+- 使用虛擬環境: `.venv\Scripts\python.exe app.py`
+- 檢查 Python 版本 (建議 3.9+)
 
 ### 登入失敗
 - 檢查帳號密碼是否正確
-- 確認網站是否可正常訪問
-- 檢查登入頁面的表單欄位名稱
+- 確認可連線到 `https://ssp.teco.com.tw`
+- 查看狀態訊息欄的錯誤說明
+- 檢查 `logs/overtime_calculator.log`
 
-### 無法取得資料
-- 確認登入後有權限訪問出勤異常頁面
-- 檢查網頁結構是否有變更
-- 查看 `overtime_calculator.log` 檔案了解詳細錯誤
+### 資料抓取失敗
+- 確認帳號有權限訪問「出勤異常清單」
+- 檢查網站是否維護中
+- 查看日誌檔案了解詳細錯誤
+- 可能是網頁結構變更,需更新解析邏輯
 
-### 時間計算錯誤
-- 確認刷卡時間格式是否為 `HH:MM:SS`
-- 檢查日期格式是否為 `YYYY/MM/DD`
+### 複製功能無效
+- 確認已選取表格中的項目
+- 使用 `Ctrl+C` 或右鍵選單
+- 只能複製加班時數欄位
+
+### Excel 匯出失敗
+- 檢查 `reports/` 資料夾是否存在 (程式會自動建立)
+- 確認檔案未被其他程式開啟
+- 檢查磁碟空間是否充足
+
+### 打包執行檔問題
+- 使用虛擬環境打包: `.venv\Scripts\python.exe -m PyInstaller overtime_calculator.spec --clean`
+- 確認 `assets/icon.ico` 存在
+- Windows Defender 可能誤判,加入信任清單
+- 參考 [BUILD.md](BUILD.md) 詳細說明
+
+### 圖示不顯示
+- 確認 `assets/icon.ico` 和 `assets/icon.png` 存在
+- 重新打包: `pyinstaller overtime_calculator.spec --clean --noconfirm`
+- 開發環境會優先使用 `.ico`,打包版本也會包含圖示檔案
 
 ## 授權與免責聲明
 
@@ -171,20 +244,33 @@ login_data = {
 
 ## 更新記錄
 
-- v2.1 (2025/11/20): 修正表格解析問題
-  - 🔧 修正無法找到 ContentPlaceHolder1_gvWeb012 表格的問題
-  - 🔧 移除無效的 #tabs-2 URL 錨點
-  - ✨ 增強表格定位邏輯,支援多種 HTML 結構
-  - ✨ 改進日誌輸出,提供更詳細的除錯資訊
-  - ✨ 支援更靈活的 span ID 匹配 (日期/時間欄位)
-  
-- v2.0 (2025/11): 進階版
-  - 配置檔案支援
-  - 批次處理功能
-  - 詳細日誌記錄
-  
-- v1.0 (2025/11): 初始版本
-  - 自動登入功能
-  - 多頁資料抓取
-  - 加班時數計算
-  - Excel 匯出功能
+### v0.1.0 (2025/11/21): GUI 重構版 🎨
+
+**全新功能**:
+- 🎨 現代化 GUI 介面 (CustomTkinter 深色主題)
+- 🏗️ MVC 模組化架構重構
+- 📊 可排序、可複製的表格檢視
+- 📋 智慧複製功能 (加班時數欄位)
+- 🔐 背景登入和資料抓取 (非阻塞式)
+- 💾 一鍵 Excel 匯出
+- 📝 彩色狀態訊息顯示
+- ✅ 完整單元測試 (17 個測試)
+- 📦 PyInstaller 打包支援
+- 🎯 應用程式圖示支援
+
+**技術改進**:
+- ✨ 分離業務邏輯、資料層、UI 層
+- ✨ Dataclass 資料模型
+- ✨ 依賴注入設計
+- ✨ 完整的日誌系統
+- ✨ 錯誤處理和異常捕獲
+
+**Bug 修正**:
+- 🔧 修正 ASP.NET GridView 表格解析
+- 🔧 修正 SSL 憑證驗證問題
+- 🔧 改進分頁處理邏輯
+- 🔧 修正時間計算精度
+
+### v1.x (2025/11): CLI 版本 (已棄用)
+- 基礎 CLI 功能
+- 單檔案架構 (main.py)
