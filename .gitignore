@@ -218,3 +218,6 @@ __marimo__/
 # Local log and report files
 logs/
 reports/
+
+# Update cache
+cache/
