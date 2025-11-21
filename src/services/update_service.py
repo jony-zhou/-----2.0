@@ -66,13 +66,8 @@ class UpdateService:
             }
         """
         try:
-            # 先檢查快取
-            cached_data = self._load_cache()
-            if cached_data and self._is_cache_valid(cached_data):
-                logger.debug("使用快取的版本資訊")
-                return cached_data
-            
-            # 取得最新 release 資訊
+            # 每次啟動都檢查最新版本 (不使用快取)
+            # 這確保使用者能及時收到更新通知
             logger.info(f"檢查更新: {self.api_url}")
             response = requests.get(
                 self.api_url,
@@ -108,11 +103,12 @@ class UpdateService:
                 'release_notes': release_data.get('body', ''),
                 'download_url': download_url,
                 'published_at': release_data.get('published_at', ''),
+                'release_url': release_data.get('html_url', ''),  # 新增 Release 頁面連結
                 'cached_at': datetime.now().isoformat()
             }
             
-            # 儲存快取
-            self._save_cache(update_info)
+            # 不再儲存快取,每次都檢查最新版本
+            # self._save_cache(update_info)
             
             if has_update:
                 logger.info(f"發現新版本: {latest_version} (當前: {current_version})")

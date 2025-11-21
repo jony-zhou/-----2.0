@@ -118,7 +118,7 @@ class UpdateDialog(ctk.CTkToplevel):
         # 更新內容文字框
         notes_text = ctk.CTkTextbox(
             main_frame,
-            height=150,
+            height=120,
             font=ctk.CTkFont(size=12)
         )
         notes_text.pack(fill="both", expand=True, pady=(0, 10))
@@ -126,6 +126,42 @@ class UpdateDialog(ctk.CTkToplevel):
         release_notes = self.update_info.get('release_notes', '無更新說明')
         notes_text.insert("1.0", release_notes)
         notes_text.configure(state="disabled")  # 唯讀
+        
+        # 下載連結顯示
+        download_url = self.update_info.get('download_url', '')
+        release_url = self.update_info.get('release_url', '')
+        
+        if download_url or release_url:
+            link_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
+            link_frame.pack(fill="x", pady=(0, 10))
+            
+            link_label = ctk.CTkLabel(
+                link_frame,
+                text="📥 下載連結:",
+                font=ctk.CTkFont(size=12),
+                anchor="w"
+            )
+            link_label.pack(side="left", padx=(0, 5))
+            
+            # 可點擊的超連結
+            url_to_display = download_url if download_url else release_url
+            # 縮短顯示的 URL
+            display_url = url_to_display
+            if len(display_url) > 50:
+                display_url = display_url[:47] + "..."
+            
+            url_button = ctk.CTkButton(
+                link_frame,
+                text=display_url,
+                command=lambda: self._open_url(url_to_display),
+                font=ctk.CTkFont(size=11, underline=True),
+                fg_color="transparent",
+                text_color="#2196F3",
+                hover_color="#E3F2FD",
+                cursor="hand2",
+                anchor="w"
+            )
+            url_button.pack(side="left", fill="x", expand=True)
         
         # 按鈕框架
         button_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
@@ -154,6 +190,14 @@ class UpdateDialog(ctk.CTkToplevel):
             hover_color="#666666"
         )
         later_btn.pack(side="right", fill="x", expand=True, padx=(5, 0))
+    
+    def _open_url(self, url: str) -> None:
+        """開啟 URL"""
+        try:
+            logger.info(f"開啟連結: {url}")
+            webbrowser.open(url)
+        except Exception as e:
+            logger.error(f"開啟瀏覽器失敗: {e}")
     
     def _on_download(self) -> None:
         """處理下載按鈕點擊"""

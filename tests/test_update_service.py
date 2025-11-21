@@ -62,6 +62,7 @@ class TestUpdateService:
         assert result['has_update'] is True
         assert result['latest_version'] == '999.0.0'
         assert result['download_url'] == 'https://github.com/test/app.exe'
+        assert result['release_url'] == 'https://github.com/test/repo/releases/tag/v999.0.0'
     
     @patch('src.services.update_service.requests.get')
     def test_check_for_updates_no_update(self, mock_get):
@@ -140,7 +141,7 @@ class TestUpdateService:
         assert url == 'https://github.com/test/repo'
     
     def test_cache_save_and_load(self):
-        """測試快取儲存和載入"""
+        """測試快取儲存和載入 (保留功能但不使用)"""
         test_data = {
             'has_update': True,
             'latest_version': '1.0.0',
@@ -158,7 +159,7 @@ class TestUpdateService:
         assert loaded_data['latest_version'] == '1.0.0'
     
     def test_cache_valid(self):
-        """測試快取有效性檢查"""
+        """測試快取有效性檢查 (保留功能但不使用)"""
         # 新快取應該有效
         cached_data = {
             'cached_at': datetime.now().isoformat()
@@ -167,7 +168,7 @@ class TestUpdateService:
         
         # 過期快取應該無效
         old_data = {
-            'cached_at': (datetime.now() - timedelta(hours=2)).isoformat()
+            'cached_at': (datetime.now() - timedelta(hours=7)).isoformat()
         }
         assert self.service._is_cache_valid(old_data) is False
     
@@ -183,8 +184,8 @@ class TestUpdateService:
         assert not self.service.cache_file.exists()
     
     @patch('src.services.update_service.requests.get')
-    def test_check_uses_cache(self, mock_get):
-        """測試使用快取避免重複請求"""
+    def test_always_check_no_cache(self, mock_get):
+        """測試每次啟動都檢查,不使用快取"""
         # 第一次請求會呼叫 API
         mock_response = Mock()
         mock_response.status_code = 200
@@ -200,9 +201,9 @@ class TestUpdateService:
         result1 = self.service.check_for_updates()
         assert mock_get.call_count == 1
         
-        # 第二次請求應使用快取,不呼叫 API
+        # 第二次請求應該再次呼叫 API (不使用快取)
         result2 = self.service.check_for_updates()
-        assert mock_get.call_count == 1  # 沒有增加
+        assert mock_get.call_count == 2  # 應該增加
         
         # 兩次結果應該相同
         assert result1['latest_version'] == result2['latest_version']

@@ -265,7 +265,7 @@ class MainWindow(ctk.CTk):
     
     def _check_for_updates(self):
         """背景檢查版本更新"""
-        logger.debug("開始檢查更新...")
+        logger.info("開始檢查應用程式更新...")
         
         def check_thread():
             try:
@@ -274,11 +274,14 @@ class MainWindow(ctk.CTk):
                 
                 # 在主執行緒顯示對話框
                 if update_info and update_info.get('has_update'):
+                    logger.info(f"發現新版本 {update_info.get('latest_version')},顯示更新對話框")
                     self.after(0, lambda: show_update_dialog(self, update_info))
+                else:
+                    logger.info("目前已是最新版本")
                 
             except Exception as e:
                 # 更新檢查失敗不影響主程式
-                logger.debug(f"更新檢查失敗: {e}")
+                logger.warning(f"版本更新檢查失敗: {e}")
         
         thread = threading.Thread(target=check_thread, daemon=True)
         thread.start()
