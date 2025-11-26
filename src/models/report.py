@@ -1,8 +1,11 @@
 """加班報表資料模型"""
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, TYPE_CHECKING
 from datetime import datetime
 from .attendance import AttendanceRecord
+
+if TYPE_CHECKING:
+    from .overtime_submission import OvertimeSubmissionRecord
 
 
 @dataclass
@@ -58,3 +61,27 @@ class OvertimeReport:
             "最長加班": f"{self.max_overtime_hours:.1f}",
             "最長加班日期": self.max_overtime_date
         }
+    
+    def to_submission_records(self, default_description: str = "加班作業") -> List['OvertimeSubmissionRecord']:
+        """
+        轉換為加班補報記錄列表
+        
+        Args:
+            default_description: 預設加班內容
+            
+        Returns:
+            加班補報記錄列表 (只包含有加班時數的記錄)
+        """
+        from .overtime_submission import OvertimeSubmissionRecord
+        
+        return [
+            OvertimeSubmissionRecord(
+                date=record.date,
+                description=default_description,
+                overtime_hours=record.overtime_hours,
+                is_overtime=True,  # 預設為加班
+                is_selected=True,  # 預設勾選
+            )
+            for record in self.records
+            if record.overtime_hours > 0  # 只包含有加班的記錄
+        ]
