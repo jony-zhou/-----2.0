@@ -32,7 +32,7 @@ class ReportFrame(ctk.CTkFrame):
         
         title = ctk.CTkLabel(
             header,
-            text="加班時數報表",
+            text="出勤異常清單(本月)",
             font=ctk.CTkFont(size=18, weight="bold")
         )
         title.pack(side="left", padx=10)
