@@ -334,16 +334,25 @@ class OvertimeReportTab(ctk.CTkFrame):
         )
         date_label.pack(padx=spacing.sm, pady=spacing.xs)
         
-        # 加班內容 (可編輯)
+        # 加班內容 (可編輯 - 必填)
         if not record.is_submitted:
             content_entry = ctk.CTkEntry(
                 item_frame,
-                placeholder_text="請輸入加班內容",
+                placeholder_text="請輸入加班內容 (必填)",
                 **get_font_config("body"),
-                width=300
+                width=300,
+                border_color=colors.error if not record.description else colors.background_tertiary
             )
             content_entry.insert(0, record.description)
-            content_entry.bind("<KeyRelease>", lambda e: setattr(record, 'description', content_entry.get()))
+            
+            def on_content_change(e):
+                record.description = content_entry.get()
+                # 更新邊框顏色
+                content_entry.configure(
+                    border_color=colors.background_tertiary if record.description else colors.error
+                )
+            
+            content_entry.bind("<KeyRelease>", on_content_change)
             content_entry.pack(side="left", padx=spacing.sm)
         else:
             content_label = ctk.CTkLabel(
@@ -355,12 +364,12 @@ class OvertimeReportTab(ctk.CTkFrame):
             )
             content_label.pack(side="left", padx=spacing.sm)
         
-        # 時數
+        # 時數 (小時)
         hours_label = ctk.CTkLabel(
             item_frame,
-            text=f"{record.overtime_hours:.1f}h",
+            text=f"{record.overtime_hours:.1f} hr",
             **get_font_config("body"),
-            width=60
+            width=70
         )
         hours_label.pack(side="left", padx=spacing.sm)
         
@@ -485,6 +494,16 @@ class OvertimeReportTab(ctk.CTkFrame):
         
         if not selected:
             messagebox.showwarning("提示", "請至少勾選一筆記錄")
+            return
+        
+        # 驗證加班內容必填
+        empty_records = [r for r in selected if not r.description.strip()]
+        if empty_records:
+            messagebox.showerror(
+                "驗證失敗",
+                f"以下記錄的加班內容為空,請填寫後再送出:\n\n" +
+                "\n".join([f"- {r.date}" for r in empty_records[:5]])
+            )
             return
         
         # 確認對話框

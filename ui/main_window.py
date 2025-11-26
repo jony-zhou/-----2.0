@@ -66,7 +66,7 @@ class MainWindow(ctk.CTk):
     def _init_window_settings(self):
         """初始化視窗設定 (Single Responsibility)"""
         self.title(f"TECO SSP 加班助手 v{self.version}")
-        self.geometry("1200x800")
+        self.geometry("1200x900")
         
         # 設定主題
         ctk.set_appearance_mode("dark")
