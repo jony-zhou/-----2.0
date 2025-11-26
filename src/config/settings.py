@@ -7,6 +7,9 @@ class Settings:
     """系統設定"""
     # SSP 系統
     SSP_BASE_URL: str = "https://ssp.teco.com.tw"
+    ATTENDANCE_URL: str = "/FW99001Z.aspx"  # 出勤異常清單
+    OVERTIME_REPORT_URL: str = "/FW21001Z.aspx?Kind=B"  # 加班補報申請單
+    OVERTIME_STATUS_URL: str = "/FW21003Z.aspx"  # 個人紀錄查詢
     
     # 時間設定 (分鐘)
     LUNCH_BREAK: int = 70
@@ -14,6 +17,10 @@ class Settings:
     REST_TIME: int = 30
     MAX_OVERTIME_HOURS: int = 4
     STANDARD_START_HOUR: int = 9
+    
+    # 加班補報設定
+    DEFAULT_OVERTIME_DESCRIPTION: str = "加班作業"
+    ENABLE_SUBMISSION: bool = False  # Beta 版本預設禁用送出功能
     
     # 日期格式
     DATE_FORMAT: str = "%Y/%m/%d"
