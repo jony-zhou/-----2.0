@@ -1,6 +1,5 @@
 """個人加班記錄資料模型"""
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass
@@ -16,7 +15,7 @@ class PersonalRecord:
     overtime_hours: float        # 加班時數 (小時)
     monthly_total: float         # 當月累計 (小時)
     quarterly_total: float       # 當季累計 (小時)
-    申報: str = ""                # 申報欄位 (如果有)
+    report_type: str = ""        # 申報類型 (加班/調休)
     
     def __str__(self) -> str:
         return (
