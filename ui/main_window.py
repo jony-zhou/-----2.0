@@ -3,6 +3,7 @@
 遵循 SOLID、DRY、KISS、YAGNI 原則
 """
 import customtkinter as ctk
+from tkinter import messagebox as mb
 from typing import Optional
 import threading
 import logging
@@ -18,7 +19,10 @@ from src.services import AuthService, DataService, ExportService, UpdateService
 from src.services.credential_manager import CredentialManager
 from src.core import OvertimeCalculator, VERSION
 from src.config import Settings
-from ui.components import LoginFrame, ReportFrame, StatusFrame, show_update_dialog
+from ui.components import (
+    LoginFrame, ReportFrame, show_update_dialog,
+    OvertimeReportTab, AttendanceTab
+)
 from ui.components.statistics_card import StatisticsCard
 from ui.config import (
     colors, typography, spacing, border_radius,
@@ -40,6 +44,12 @@ class MainWindow(ctk.CTk):
     
     def __init__(self):
         super().__init__()
+        
+        # 統計卡片屬性 (初始化為 None,稍後建立)
+        self.card_total_days: Optional[StatisticsCard] = None
+        self.card_total_hours: Optional[StatisticsCard] = None
+        self.card_avg_hours: Optional[StatisticsCard] = None
+        self.card_max_hours: Optional[StatisticsCard] = None
         
         # 初始化屬性
         self.version = VERSION
@@ -142,7 +152,7 @@ class MainWindow(ctk.CTk):
                     logger.info("已載入儲存的憑證")
     
     def _create_main_page(self):
-        """建立主頁面 (DRY - 單一方法負責主頁面 UI)"""
+        """建立主頁面 (使用分頁介面)"""
         self.main_content = ctk.CTkFrame(
             self.main_container, 
             fg_color=colors.background_primary
@@ -150,17 +160,16 @@ class MainWindow(ctk.CTk):
         
         # 建立各個區塊
         self._create_navbar()
-        self._create_status_section()
-        self._create_statistics_section()
-        self._create_report_section()
+        self._create_statistics_section()  # 統計卡片區域 (取代狀態區)
+        self._create_tabview()  # 分頁介面
         self._create_footer()
     
     def _create_navbar(self):
-        """建立頂部導覽列"""
+        """建立頂部導覽列 (優化視覺階層)"""
         navbar = ctk.CTkFrame(
             self.main_content,
             fg_color=colors.background_secondary,
-            height=70,
+            height=64,
             corner_radius=0
         )
         navbar.pack(fill="x")
@@ -259,17 +268,46 @@ class MainWindow(ctk.CTk):
         )
         self.logout_button.pack(side="left")
     
-    def _create_status_section(self):
-        """建立狀態區域"""
-        self.status_frame = StatusFrame(self.main_content)
-        self.status_frame.pack(fill="x", padx=spacing.lg, pady=(spacing.md, 0))
+    def _create_tabview(self):
+        """建立分頁介面 (優化視覺設計)"""
+        # 分頁容器
+        self.tabview = ctk.CTkTabview(
+            self.main_content,
+            fg_color=colors.background_primary,
+            segmented_button_fg_color=colors.background_secondary,
+            segmented_button_selected_color=colors.primary,
+            segmented_button_selected_hover_color=colors.primary_hover,
+            segmented_button_unselected_color=colors.background_tertiary,
+            segmented_button_unselected_hover_color=colors.background_secondary,
+            border_width=0,
+            corner_radius=border_radius.md
+        )
+        self.tabview.pack(fill="both", expand=True, padx=spacing.lg, pady=(0, spacing.md))
+        
+        # 建立分頁 1: 加班補報
+        self.tabview.add("⚙️ 加班補報")
+        self.overtime_tab = OvertimeReportTab(self.tabview.tab("⚙️ 加班補報"))
+        self.overtime_tab.pack(fill="both", expand=True, padx=0, pady=0)
+        
+        # 建立分頁 2: 異常清單
+        self.tabview.add("📅 異常清單")
+        self.attendance_tab = AttendanceTab(
+            self.tabview.tab("📅 異常清單"),
+            on_export=self.on_export,
+            on_refresh=self.on_refresh
+        )
+        self.attendance_tab.pack(fill="both", expand=True, padx=0, pady=0)
+        
+        # 預設顯示加班補報分頁
+        self.tabview.set("⚙️ 加班補報")
     
     def _create_statistics_section(self):
-        """建立統計卡片區域"""
+        """建立統計卡片區域 (始終顯示)"""
         self.stats_container = ctk.CTkFrame(
             self.main_content, 
             fg_color="transparent"
         )
+        self.stats_container.pack(fill="x", padx=spacing.lg, pady=spacing.md)
         
         # Grid 布局 (4 欄)
         self.stats_container.grid_columnconfigure((0, 1, 2, 3), weight=1)
@@ -278,8 +316,10 @@ class MainWindow(ctk.CTk):
         self._create_statistics_cards()
     
     def _create_statistics_cards(self):
-        """建立統計卡片 (DRY - 避免重複代碼)"""
-        # 卡片配置 (資料驅動設計)
+        """建立統計卡片"""
+        from ui.components.statistics_card import StatisticsCard
+        
+        # 卡片配置
         cards_config = [
             {
                 "attr": "card_total_days",
@@ -332,14 +372,6 @@ class MainWindow(ctk.CTk):
                 sticky="ew"
             )
             setattr(self, config["attr"], card)
-    
-    def _create_report_section(self):
-        """建立報表區域"""
-        self.report_frame = ReportFrame(
-            self.main_content,
-            on_export=self.on_export,
-            on_refresh=self.on_refresh
-        )
     
     def _create_footer(self):
         """建立底部資訊列"""
@@ -466,8 +498,6 @@ class MainWindow(ctk.CTk):
     
     def fetch_data(self):
         """抓取出勤資料"""
-        self.status_frame.show_status("正在抓取出勤資料...", "info")
-        
         self._execute_in_background(
             self._fetch_data_task,
             callback=self._on_fetch_complete
@@ -503,33 +533,31 @@ class MainWindow(ctk.CTk):
             self._handle_failed_fetch(error)
     
     def _handle_successful_fetch(self, report: OvertimeReport):
-        """處理成功的資料抓取 (Single Responsibility)"""
+        """處理成功的資料抓取 (載入資料到分頁)"""
         self.current_report = report
         
-        # 更新狀態
-        self.status_frame.show_status(
-            f"✓ 成功取得 {report.total_days} 筆記錄",
-            "success"
-        )
-        
-        # 更新統計卡片
+        # 顯示並更新統計卡片
+        self.stats_container.pack(fill="x", padx=spacing.lg, pady=(0, spacing.md))
         self._update_statistics_cards(report)
         
-        # 顯示報表
-        self._show_report(report)
+        # 載入資料到異常清單分頁
+        self.attendance_tab.display_report(report)
+        
+        # 載入資料到加班補報分頁
+        submission_records = report.to_submission_records()
+        if self.auth_service and hasattr(self.auth_service, 'get_session'):
+            session = self.auth_service.get_session()
+            self.overtime_tab.load_data(submission_records, session)
         
         # 更新時間戳記
         self._update_timestamp()
     
     def _update_statistics_cards(self, report: OvertimeReport):
-        """
-        更新統計卡片
+        """更新統計卡片數據"""
+        if not all([self.card_total_days, self.card_total_hours, 
+                    self.card_avg_hours, self.card_max_hours]):
+            return
         
-        使用正確的屬性名稱:
-        - total_overtime_hours (不是 total_hours)
-        - max_overtime_hours
-        - average_overtime_hours
-        """
         # 總筆數
         self.card_total_days.update_value(str(report.total_days))
         
@@ -549,22 +577,11 @@ class MainWindow(ctk.CTk):
         )
     
     def _show_report(self, report: OvertimeReport):
-        """顯示報表"""
-        # 顯示統計卡片容器
-        self.stats_container.pack(
-            fill="x", 
-            padx=spacing.lg, 
-            pady=(spacing.sm, 0)
-        )
-        
-        # 顯示報表框架
-        self.report_frame.pack(
-            fill="both", 
-            expand=True, 
-            padx=spacing.lg, 
-            pady=spacing.md
-        )
-        self.report_frame.display_report(report)
+        """
+        [已廢棄] 舊版報表顯示 (分頁模式已整合至 AttendanceTab)
+        保留此方法以避免破壞現有程式碼
+        """
+        pass
     
     def _update_timestamp(self):
         """更新時間戳記"""
@@ -573,16 +590,14 @@ class MainWindow(ctk.CTk):
     
     def _handle_failed_fetch(self, error: Optional[str]):
         """處理失敗的資料抓取"""
-        error_msg = f"✗ {error}" if error else "✗ 抓取資料失敗"
-        self.status_frame.show_status(error_msg, "error")
+        error_msg = f"抓取資料失敗: {error}" if error else "抓取資料失敗"
+        mb.showerror("錯誤", error_msg)
     
     def on_export(self):
         """匯出處理"""
         if not self.current_report:
-            self.status_frame.show_status("沒有可匯出的資料", "error")
+            mb.showerror("錯誤", "沒有可匯出的資料")
             return
-        
-        self.status_frame.show_status("正在匯出...", "info")
         
         self._execute_in_background(
             self._export_task,
@@ -608,22 +623,18 @@ class MainWindow(ctk.CTk):
         filename, error = result
         
         if filename:
-            self.status_frame.show_status(f"✓ 已匯出至: {filename}", "success")
+            mb.showinfo("匯出成功", f"已匯出至: {filename}")
         else:
-            error_msg = f"✗ 匯出錯誤: {error}" if error else "✗ 匯出失敗"
-            self.status_frame.show_status(error_msg, "error")
+            error_msg = f"匯出錯誤: {error}" if error else "匯出失敗"
+            mb.showerror("匯出失敗", error_msg)
     
     def on_refresh(self):
-        """重新整理資料"""
+        """重新整理資料 (分頁模式)"""
         if not self.data_service:
-            self.status_frame.show_status("請先登入", "error")
+            mb.showerror("錯誤", "請先登入")
             return
         
-        # 隱藏報表 (準備重新載入)
-        self.report_frame.pack_forget()
-        self.stats_container.pack_forget()
-        
-        # 重新抓取
+        # 分頁模式不需要隱藏元件,直接重新抓取
         self.fetch_data()
     
     def on_logout(self):
@@ -639,9 +650,6 @@ class MainWindow(ctk.CTk):
         
         # 重置 UI
         self._switch_to_login_page()
-        
-        # 顯示訊息
-        self.status_frame.show_status("已登出", "info")
     
     def _clear_sensitive_data(self):
         """
@@ -656,13 +664,9 @@ class MainWindow(ctk.CTk):
         self._login_password = None  # 清除密碼
     
     def _switch_to_login_page(self):
-        """切換到登入頁面"""
+        """切換到登入頁面 (分頁模式)"""
         # 隱藏主頁面
         self.main_content.pack_forget()
-        
-        # 隱藏報表和統計
-        self.report_frame.pack_forget()
-        self.stats_container.pack_forget()
         
         # 顯示登入頁面
         self.login_frame.pack(fill="both", expand=True)
