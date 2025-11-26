@@ -34,31 +34,25 @@ class OvertimeStatusService:
         submitted_records = {}
         
         try:
-            logger.info("正在查詢已申請的加班記錄...")
+            logger.info("開始查詢已申請的加班記錄 (不換頁模式)")
             
-            # 取得第一頁
+            # 使用 ddlPage=9999 一次取得所有記錄
+            params = {
+                'ctl00$ContentPlaceHolder1$ddlPage': '9999'
+            }
+            
             response = session.get(
                 url,
+                params=params,
                 timeout=self.settings.REQUEST_TIMEOUT,
                 verify=self.settings.VERIFY_SSL
             )
             
             soup = BeautifulSoup(response.text, 'html.parser')
             
-            # 解析第一頁資料
+            # 解析所有資料 (不需要分頁)
             records = self._parse_status_table(soup)
             submitted_records.update(records)
-            
-            # 檢查是否有分頁
-            total_pages = self._get_total_pages(soup)
-            logger.info(f"發現 {total_pages} 頁記錄")
-            
-            # 抓取其他頁面
-            if total_pages > 1:
-                for page_num in range(2, min(total_pages + 1, self.settings.MAX_PAGES + 1)):
-                    logger.info(f"正在抓取第 {page_num} 頁...")
-                    page_records = self._fetch_status_page(session, soup, page_num)
-                    submitted_records.update(page_records)
             
             logger.info(f"✓ 已查詢 {len(submitted_records)} 筆已申請記錄")
             return submitted_records
@@ -132,91 +126,14 @@ class OvertimeStatusService:
     
     def _get_total_pages(self, soup: BeautifulSoup) -> int:
         """
-        取得總頁數
-        
-        Args:
-            soup: BeautifulSoup 物件
-            
-        Returns:
-            總頁數
+        [已廢棄] 取得總頁數 (使用 ddlPage=9999 後不再需要)
+        保留此方法以避免破壞現有程式碼
         """
-        try:
-            # 找到分頁區域: class="FlowPagerStyle"
-            pager = soup.find('tr', {'class': 'FlowPagerStyle'})
-            if not pager:
-                return 1
-            
-            # 找到分頁表格中的所有頁碼連結
-            page_links = pager.find_all('a')
-            if not page_links:
-                return 1
-            
-            # 最後一個連結通常是最大頁數
-            max_page = 1
-            for link in page_links:
-                try:
-                    page_num = int(link.get_text(strip=True))
-                    max_page = max(max_page, page_num)
-                except ValueError:
-                    continue
-            
-            return max_page
-            
-        except Exception as e:
-            logger.warning(f"無法取得總頁數: {e}")
-            return 1
+        return 1
     
     def _fetch_status_page(self, session: requests.Session, soup: BeautifulSoup, page_num: int) -> Dict[str, SubmittedRecord]:
         """
-        抓取指定頁面的已申請記錄
-        
-        Args:
-            session: 已登入的 Session
-            soup: 當前頁面的 BeautifulSoup 物件 (用於取得 ViewState)
-            page_num: 頁碼
-            
-        Returns:
-            字典 {日期: SubmittedRecord}
+        [已廢棄] 抓取指定頁面的已申請記錄 (使用 ddlPage=9999 後不再需要)
+        保留此方法以避免破壞現有程式碼
         """
-        url = f"{self.settings.SSP_BASE_URL}{self.settings.OVERTIME_STATUS_URL}"
-        
-        try:
-            # 提取 ViewState
-            viewstate = soup.find('input', {'name': '__VIEWSTATE'})
-            viewstate_generator = soup.find('input', {'name': '__VIEWSTATEGENERATOR'})
-            event_validation = soup.find('input', {'name': '__EVENTVALIDATION'})
-            
-            if not viewstate:
-                logger.error("找不到 ViewState")
-                return {}
-            
-            # 準備 PostBack 資料
-            post_data = {
-                '__EVENTTARGET': 'ctl00$ContentPlaceHolder1$gvFlow211',
-                '__EVENTARGUMENT': f'Page${page_num}',
-                '__VIEWSTATE': viewstate['value'],
-                '__VIEWSTATEGENERATOR': viewstate_generator['value'] if viewstate_generator else '',
-                '__EVENTVALIDATION': event_validation['value'] if event_validation else '',
-            }
-            
-            # 發送 PostBack 請求
-            response = session.post(
-                url,
-                data=post_data,
-                timeout=self.settings.REQUEST_TIMEOUT,
-                verify=self.settings.VERIFY_SSL
-            )
-            
-            # 解析新頁面
-            new_soup = BeautifulSoup(response.text, 'html.parser')
-            records = self._parse_status_table(new_soup)
-            
-            # 更新 soup 為新頁面 (為下次分頁準備)
-            soup.clear()
-            soup.append(new_soup)
-            
-            return records
-            
-        except Exception as e:
-            logger.error(f"抓取第 {page_num} 頁失敗: {e}")
-            return {}
+        return {}

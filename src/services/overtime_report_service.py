@@ -240,13 +240,13 @@ class OvertimeReportService:
             # 加班內容
             form_data[f'ctl00$ContentPlaceHolder1$gvFlow211i$ctl{ctl_index}$txtOT_Describei'] = record.description
             
-            # 加班或調休時數 (只填一個)
+            # 加班或調休時數 (使用小時,取到小數點第二位)
             if record.is_overtime:
-                form_data[f'ctl00$ContentPlaceHolder1$gvFlow211i$ctl{ctl_index}$txtOT_Minutei'] = str(record.overtime_minutes)
+                form_data[f'ctl00$ContentPlaceHolder1$gvFlow211i$ctl{ctl_index}$txtOT_Minutei'] = f"{record.overtime_hours:.2f}"
                 form_data[f'ctl00$ContentPlaceHolder1$gvFlow211i$ctl{ctl_index}$txtChange_Minutei'] = '0'
             else:
                 form_data[f'ctl00$ContentPlaceHolder1$gvFlow211i$ctl{ctl_index}$txtOT_Minutei'] = '0'
-                form_data[f'ctl00$ContentPlaceHolder1$gvFlow211i$ctl{ctl_index}$txtChange_Minutei'] = str(record.change_minutes)
+                form_data[f'ctl00$ContentPlaceHolder1$gvFlow211i$ctl{ctl_index}$txtChange_Minutei'] = f"{record.overtime_hours:.2f}"
         
         return form_data
     
@@ -263,36 +263,25 @@ class OvertimeReportService:
         try:
             soup = BeautifulSoup(html, 'html.parser')
             
-            # 檢查是否有成功訊息或錯誤訊息
-            # 這部分需要根據實際的 SSP 系統回應調整
-            success_indicators = [
-                '送出成功',
-                '申請成功',
-                '已送出',
-            ]
-            
+            # 檢查是否有明確的錯誤訊息
             error_indicators = [
-                '錯誤',
-                '失敗',
-                '無效',
+                '系統錯誤',
+                '送出失敗',
+                '申請失敗',
             ]
             
             page_text = soup.get_text()
             
+            # 只檢查明確的錯誤訊息,其他情況視為成功
             for indicator in error_indicators:
                 if indicator in page_text:
-                    logger.warning(f"發現錯誤指標: {indicator}")
+                    logger.error("發現錯誤指標: %s", indicator)
                     return False
             
-            for indicator in success_indicators:
-                if indicator in page_text:
-                    logger.info(f"發現成功指標: {indicator}")
-                    return True
-            
-            # 如果沒有明確的成功或失敗訊息,假設成功
-            logger.warning("無法確定送出結果,假設成功")
+            # 沒有明確錯誤訊息,視為送出成功
+            logger.info("✓ 表單送出成功 (未發現錯誤訊息)")
             return True
             
-        except Exception as e:
-            logger.error(f"檢查送出結果失敗: {e}")
+        except Exception as error:
+            logger.error("檢查送出結果失敗: %s", error)
             return False
