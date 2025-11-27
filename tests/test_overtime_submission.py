@@ -1,7 +1,6 @@
 """測試加班補報資料模型"""
 
 import pytest
-from datetime import datetime
 from src.models import OvertimeReport, AttendanceRecord
 from src.models.overtime_submission import (
     OvertimeSubmissionRecord,
